@@ -281,7 +281,6 @@ const nodes = [
         system: systemPrompt,
         includeMergedResponse: true,
         maxTokens: 300,
-        temperature: 0.6,
       },
     },
     ...retry,
