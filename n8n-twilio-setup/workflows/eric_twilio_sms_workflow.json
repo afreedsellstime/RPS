@@ -300,6 +300,12 @@
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ locationId: $('Eric Config').first().json.ghlLocationId, phone: $json.phoneNumber, source: 'Eric SMS (Twilio)' }) }}"
       },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DI5ckzZHYAn3vtxZ",
+          "name": "GHL Chatbot token"
+        }
+      },
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 2000
@@ -335,6 +341,12 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ type: 'SMS', direction: 'inbound', contactId: $json.contact.id, conversationProviderId: $('Eric Config').first().json.ghlConversationProviderId, message: $('Debounce & Combine').first().json.combinedMessage, altId: $('Debounce & Combine').first().json.lastMessageSid, date: $('Debounce & Combine').first().json.timestamp, attachments: [] }) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DI5ckzZHYAn3vtxZ",
+          "name": "GHL Chatbot token"
+        }
       },
       "retryOnFail": true,
       "maxTries": 3,
@@ -376,6 +388,12 @@
               "value": "={{ $('Eric Config').first().json.historyLimit + 5 }}"
             }
           ]
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DI5ckzZHYAn3vtxZ",
+          "name": "GHL Chatbot token"
         }
       },
       "retryOnFail": true,
@@ -514,6 +532,12 @@
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ tags: $json.handoffTags }) }}"
       },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DI5ckzZHYAn3vtxZ",
+          "name": "GHL Chatbot token"
+        }
+      },
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 2000
@@ -583,6 +607,12 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ dndSettings: { sms: { status: 'active', message: 'Opted out via SMS keyword' } } }) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DI5ckzZHYAn3vtxZ",
+          "name": "GHL Chatbot token"
+        }
       },
       "retryOnFail": true,
       "maxTries": 3,
@@ -675,6 +705,12 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ type: 'SMS', direction: 'outbound', conversationId: $('Parse Eric Reply').item.json.ghlConversationId, conversationProviderId: $('Eric Config').first().json.ghlConversationProviderId, message: $('Parse Eric Reply').item.json.ericReplyText, altId: $json.sid, date: new Date().toISOString(), attachments: [] }) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DI5ckzZHYAn3vtxZ",
+          "name": "GHL Chatbot token"
+        }
       },
       "retryOnFail": true,
       "maxTries": 3,

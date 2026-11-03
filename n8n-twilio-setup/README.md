@@ -75,7 +75,7 @@ In GHL, go to **Settings → Private Integrations → Create new integration** a
 - `conversations/message.write`
 
 Copy the token. In n8n, go to **Credentials → New → Header Auth** and set:
-- **Name:** `GHL Private Integration Token`
+- **Name:** `GHL Chatbot token`
 - **Header name:** `Authorization`
 - **Header value:** `Bearer <the pit-… token>`
 
@@ -117,7 +117,7 @@ Don't add an `id` column. n8n creates one automatically.
 
 1. In n8n, go to **Workflows → Import from File** and select `workflows/eric_twilio_sms_workflow.json`.
 2. Open each node marked with a credential warning and select the matching credential:
-   - The 7 **GHL …** HTTP nodes: `GHL Private Integration Token`
+   - The 7 **GHL …** HTTP nodes: `GHL Chatbot token`
    - **Eric (Claude)**: `Anthropic (Eric)`
    - **Twilio Send Reply**: `Twilio (Eric)`
 3. **Eric Config:** paste the conversation provider ID from step 2.
@@ -158,7 +158,7 @@ All of these settings are already in the workflow JSON. This section is the refe
 | 21 | **GHL Log Outbound Reply** (HTTP Request v4.2) | `POST …/conversations/messages/inbound`; `Version: 2021-04-15`; JSON body = `payloads/ghl_log_outbound_body.n8n.txt` |
 
 **Shared settings on all GHL nodes:**
-- Authentication: `Generic Credential Type` → `Header Auth` → `GHL Private Integration Token`
+- Authentication: `Generic Credential Type` → `Header Auth` → `GHL Chatbot token`
 - Header `Accept: application/json`
 - Body sent as `JSON` using a `JSON.stringify` expression
 - **Settings → Retry On Fail** ✔, 3 tries, 2000 ms apart

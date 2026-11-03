@@ -58,6 +58,7 @@ function ghlRequest({ name, position, method, url, apiVersion, jsonBody, query }
     typeVersion: 4.2,
     position,
     parameters,
+    credentials: { httpHeaderAuth: { id: 'DI5ckzZHYAn3vtxZ', name: 'GHL Chatbot token' } },
     ...retry,
   };
 }
