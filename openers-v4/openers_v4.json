@@ -1,0 +1,36 @@
+{
+  "version": "v4 (draft for review, Nov 4 2026)",
+  "footer_added_by_ghl": "\nReply STOP to opt out",
+  "openers": {
+    "default_A": {
+      "lead_types": "notice-of-default, notice-of-trustee-sale, divorce, bankruptcy, pre-foreclosure, motivated-list, other",
+      "tag": "opener-v4a",
+      "text": "Hi {first} this is Eric with RPS. Would you consider selling {street} at some point? If not, just say no and I won't text again."
+    },
+    "default_B": {
+      "lead_types": "same as default_A (A/B split, alternate contacts)",
+      "tag": "opener-v4b",
+      "text": "Hi {first} this is Eric with RPS in San Diego. Are you still the owner of {street}? If not, no worries."
+    },
+    "expired": {
+      "lead_types": "expired-listing",
+      "tag": "opener-v4",
+      "text": "Hi {first} this is Eric with RPS. I saw {street} came off the market. Still hoping to sell, or keeping it for now?"
+    },
+    "fsbo": {
+      "lead_types": "fsbo",
+      "tag": "opener-v4",
+      "text": "Hi {first} this is Eric with RPS. Saw {street} is listed by owner. Is it still available or already sold?"
+    },
+    "affidavit": {
+      "lead_types": "affidavit-of-death (no first name)",
+      "tag": "opener-v4",
+      "text": "Hi this is Eric with RPS. Trying to reach whoever handles the property at {street}. Is that you? If not, sorry to bother you."
+    }
+  },
+  "follow_up": {
+    "when": "one time only, 4 or more days after the opener, only if they never replied",
+    "tag": "followup-v4",
+    "text": "Hi {first} Eric with RPS again about {street}. If selling isn't on your mind, just say no and I'll close my file."
+  }
+}
