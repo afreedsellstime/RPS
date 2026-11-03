@@ -13,7 +13,7 @@ const GHL_BASE = 'https://services.leadconnectorhq.com';
 const GHL_LOCATION_ID = '8C8ciDyrhieAxq70pn1I';
 const CONTACTS_API_VERSION = '2021-07-28';
 const CONVERSATIONS_API_VERSION = '2021-04-15';
-const ANTHROPIC_MODEL = 'claude-sonnet-5-5';
+const ANTHROPIC_MODEL = 'claude-opus-5-5';
 const BUFFER_TABLE = 'eric_sms_buffer';
 
 const WH = "$('Twilio Inbound Webhook').item.json.body";
@@ -280,7 +280,7 @@ const nodes = [
       options: {
         system: systemPrompt,
         includeMergedResponse: true,
-        maxTokens: 300,
+        maxTokens: 4000,
       },
     },
     ...retry,
