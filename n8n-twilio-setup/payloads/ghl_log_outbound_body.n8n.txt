@@ -1,0 +1,1 @@
+={{ JSON.stringify({ type: 'SMS', direction: 'outbound', conversationId: $('Parse Eric Reply').item.json.ghlConversationId, conversationProviderId: $('Eric Config').first().json.ghlConversationProviderId, message: $('Parse Eric Reply').item.json.ericReplyText, altId: $json.sid, date: new Date().toISOString(), attachments: [] }) }}

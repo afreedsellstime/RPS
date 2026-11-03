@@ -1,0 +1,26 @@
+{
+  "endpoint": "POST https://services.leadconnectorhq.com/conversations/messages/inbound",
+  "headers": {
+    "Authorization": "Bearer token supplied by the n8n credential 'GHL Private Integration Token' (Header Auth)",
+    "Version": "2021-04-15",
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "type": "SMS",
+    "direction": "outbound",
+    "conversationId": "{{ $('Parse Eric Reply').item.json.ghlConversationId }}",
+    "conversationProviderId": "{{ $('Eric Config').first().json.ghlConversationProviderId }}",
+    "message": "{{ $('Parse Eric Reply').item.json.ericReplyText }}",
+    "altId": "{{ $json.sid }}",
+    "date": "{{ new Date().toISOString() }}",
+    "attachments": []
+  },
+  "changesFromOriginal": {
+    "messageBody": "Renamed to 'message'. GHL ignores 'messageBody', so the logged message would be blank.",
+    "status": "Removed. Not accepted on this endpoint; GHL records the message as delivered once it's logged.",
+    "conversationProviderId": "Added. Required by GHL to record a message sent outside GHL (here, by Twilio).",
+    "altId": "Added. Stores the Twilio Message SID so the GHL record can be traced back to Twilio.",
+    "endpoint": "Use /conversations/messages/inbound with direction 'outbound'. POST /conversations/messages would make GHL SEND a second SMS.",
+    "escaping": "In n8n, use the JSON.stringify expression in ghl_log_outbound_body.n8n.txt instead of quoted {{ }} placeholders. Otherwise a reply containing a double quote or a newline produces invalid JSON and the request fails."
+  }
+}

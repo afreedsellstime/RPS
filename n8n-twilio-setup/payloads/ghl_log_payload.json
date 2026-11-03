@@ -1,0 +1,8 @@
+{
+  "type": "SMS",
+  "status": "delivered",
+  "direction": "outbound",
+  "conversationId": "{{ $json.ghlConversationId }}",
+  "messageBody": "{{ $json.ericReplyText }}",
+  "attachments": []
+}

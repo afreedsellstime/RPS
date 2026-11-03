@@ -1,0 +1,904 @@
+{
+  "name": "Eric - Twilio Inbound SMS (15s Buffer -> Claude -> GHL)",
+  "nodes": [
+    {
+      "id": "trigger-0001",
+      "name": "Twilio Inbound Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "6f0c2a7e-3b1d-4c8e-9a51-2e7d4b9c1f30",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "twilio/eric-inbound-sms",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "respond-0002",
+      "name": "Ack Twilio (Empty TwiML)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/xml"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "set-0003",
+      "name": "Eric Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-0004",
+              "name": "ghlLocationId",
+              "value": "8C8ciDyrhieAxq70pn1I",
+              "type": "string"
+            },
+            {
+              "id": "cfg-0005",
+              "name": "ghlConversationProviderId",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "cfg-0006",
+              "name": "handoffTag",
+              "value": "eric-manual-review",
+              "type": "string"
+            },
+            {
+              "id": "cfg-0007",
+              "name": "optOutTag",
+              "value": "sms-opt-out",
+              "type": "string"
+            },
+            {
+              "id": "cfg-0008",
+              "name": "historyLimit",
+              "value": 20,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "table-0009",
+      "name": "Buffer Inbound SMS",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "eric_sms_buffer"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phone": "={{ $('Twilio Inbound Webhook').item.json.body.From }}",
+            "body": "={{ $('Twilio Inbound Webhook').item.json.body.Body ? $('Twilio Inbound Webhook').item.json.body.Body : (Number($('Twilio Inbound Webhook').item.json.body.NumMedia) > 0 ? '[Sent ' + $('Twilio Inbound Webhook').item.json.body.NumMedia + ' photo/media attachment(s)]' : '') }}",
+            "messageSid": "={{ $('Twilio Inbound Webhook').item.json.body.MessageSid }}",
+            "toNumber": "={{ $('Twilio Inbound Webhook').item.json.body.To }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "body",
+              "displayName": "body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "messageSid",
+              "displayName": "messageSid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "toNumber",
+              "displayName": "toNumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "wait-0010",
+      "name": "Wait 15s (Rapid-Fire Window)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        300
+      ],
+      "webhookId": "b2e94f1a-7c3d-4e6b-8f20-5a1c9d7e3b42",
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 15,
+        "unit": "seconds"
+      }
+    },
+    {
+      "id": "table-0011",
+      "name": "Get Buffered Messages",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        300
+      ],
+      "alwaysOutputData": true,
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "eric_sms_buffer"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "phone",
+              "condition": "eq",
+              "keyValue": "={{ $('Twilio Inbound Webhook').item.json.body.From }}"
+            }
+          ]
+        },
+        "returnAll": true,
+        "orderBy": true,
+        "orderByColumn": "id",
+        "orderByDirection": "ASC"
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "code-0012",
+      "name": "Debounce & Combine",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// n8n Code node: \"Debounce & Combine\"\n// Mode: Run Once for All Items\n//\n// Production replacement for twilio_buffer.js.\n//\n// Why: Twilio fires one webhook per SMS, and n8n starts one execution per\n// webhook, so $input.all() inside a single execution only ever holds that one\n// message. Aggregation therefore has to happen in shared state (the\n// \"eric_sms_buffer\" n8n Data Table) instead of in memory.\n//\n// Flow before this node:\n//   Webhook -> insert row into eric_sms_buffer -> Wait 15s -> get all buffered\n//   rows for this sender (sorted ASC).\n//\n// Debounce rule: only the execution that owns the NEWEST buffered message for\n// this phone number continues. Every earlier execution returns [] and stops,\n// so the lead gets exactly one reply per burst of texts. The grouping/joining\n// output shape matches twilio_buffer.js so downstream nodes see the same fields.\n\nconst config = $('Eric Config').first().json;\nif (!config.ghlConversationProviderId) {\n  throw new Error(\n    'Eric Config.ghlConversationProviderId is empty. Create the GHL Custom SMS ' +\n    'Conversation Provider (README step 2) and paste its ID into the Eric Config node.'\n  );\n}\n\nconst trigger = $('Twilio Inbound Webhook').first().json.body;\nconst mySid = trigger.MessageSid;\n\nconst rows = $input\n  .all()\n  .map((item) => item.json)\n  .filter((row) => row && row.messageSid && row.phone === trigger.From)\n  .sort((a, b) => Number(a.id) - Number(b.id));\n\nif (rows.length === 0) {\n  // Another execution already consumed and cleared this burst.\n  return [];\n}\n\nconst latest = rows[rows.length - 1];\nif (latest.messageSid !== mySid) {\n  // A newer text arrived inside the window; that execution will reply.\n  return [];\n}\n\nconst messages = rows\n  .map((row) => (row.body || '').trim())\n  .filter((body) => body.length > 0);\n\nif (messages.length === 0) {\n  return [];\n}\n\nreturn [\n  {\n    json: {\n      phoneNumber: trigger.From,\n      twilioNumber: trigger.To,\n      combinedMessage: messages.join(' \\n '),\n      individualMessages: messages,\n      messageCount: rows.length,\n      messageSids: rows.map((row) => row.messageSid),\n      lastMessageSid: mySid,\n      maxBufferRowId: Number(latest.id),\n      originalTwilioData: trigger,\n      timestamp: new Date().toISOString(),\n    },\n  },\n];\n"
+      }
+    },
+    {
+      "id": "table-0013",
+      "name": "Clear Consumed Buffer",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "eric_sms_buffer"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "phone",
+              "condition": "eq",
+              "keyValue": "={{ $json.phoneNumber }}"
+            },
+            {
+              "keyName": "id",
+              "condition": "lte",
+              "keyValue": "={{ $json.maxBufferRowId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "ghl-0014",
+      "name": "GHL Upsert Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/upsert",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ locationId: $('Eric Config').first().json.ghlLocationId, phone: $json.phoneNumber, source: 'Eric SMS (Twilio)' }) }}"
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "ghl-0015",
+      "name": "GHL Log Inbound Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages/inbound",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: 'SMS', direction: 'inbound', contactId: $json.contact.id, conversationProviderId: $('Eric Config').first().json.ghlConversationProviderId, message: $('Debounce & Combine').first().json.combinedMessage, altId: $('Debounce & Combine').first().json.lastMessageSid, date: $('Debounce & Combine').first().json.timestamp, attachments: [] }) }}"
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "ghl-0016",
+      "name": "GHL Get Conversation History",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1980,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/conversations/{{ $json.conversationId }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "={{ $('Eric Config').first().json.historyLimit + 5 }}"
+            }
+          ]
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "code-0017",
+      "name": "Build Eric Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// n8n Code node: \"Build Eric Context\"\n// Mode: Run Once for All Items\n//\n// Input: response of \"GHL Get Conversation History\"\n//   (GET /conversations/{conversationId}/messages)\n//\n// Does three things:\n//   1. Hard gate: if the contact is already tagged for manual review / opted\n//      out, or has DND on, stop here so Eric never texts them again.\n//   2. Deterministic opt-out detection (carrier keywords). Compliance must not\n//      depend on the LLM remembering to emit [TRIGGER_HANDOFF].\n//   3. Builds the transcript + new-message prompt that Eric receives.\n\nconst config = $('Eric Config').first().json;\nconst batch = $('Debounce & Combine').first().json;\nconst contact = $('GHL Upsert Contact').first().json.contact || {};\nconst inboundLog = $('GHL Log Inbound Message').first().json;\n\n// ---- 1. Stop if a human already owns this lead ---------------------------\nconst tags = (contact.tags || []).map((t) => String(t).toLowerCase());\nconst blockedTags = [config.handoffTag, config.optOutTag].map((t) => t.toLowerCase());\nif (contact.dnd === true || tags.some((t) => blockedTags.includes(t))) {\n  return [];\n}\n\n// ---- 2. Deterministic opt-out keywords -----------------------------------\nconst OPT_OUT_EXACT = new Set([\n  'stop', 'stopall', 'stop all', 'unsubscribe', 'cancel', 'end', 'quit',\n  'remove', 'remove me', 'opt out', 'optout', 'revoke',\n]);\nconst OPT_OUT_PHRASE = /\\b(unsubscribe|remove me|take me off|stop texting|stop messaging|opt[\\s-]?out|do not (text|contact) me|don'?t (text|contact) me)\\b/i;\n\nconst normalize = (s) => s.toLowerCase().replace(/[^a-z\\s]/g, '').replace(/\\s+/g, ' ').trim();\nconst forcedOptOut =\n  batch.individualMessages.some((m) => OPT_OUT_EXACT.has(normalize(m))) ||\n  OPT_OUT_PHRASE.test(batch.combinedMessage);\n\n// ---- 3. Transcript -------------------------------------------------------\nconst res = $input.first().json || {};\nconst rawMessages = Array.isArray(res.messages?.messages)\n  ? res.messages.messages\n  : Array.isArray(res.messages)\n    ? res.messages\n    : [];\n\nconst history = rawMessages\n  .filter((m) => m && typeof m.body === 'string' && m.body.trim().length > 0)\n  .filter((m) => m.id !== inboundLog.messageId) // the burst we just logged\n  .sort((a, b) => new Date(a.dateAdded) - new Date(b.dateAdded))\n  .slice(-Number(config.historyLimit))\n  .map((m) => `${m.direction === 'inbound' ? 'Lead' : 'Eric/Team'}: ${m.body.trim()}`);\n\nconst leadName = [contact.firstName, contact.lastName].filter(Boolean).join(' ') || 'Unknown';\n\nconst userPrompt = [\n  `Lead name: ${leadName}`,\n  `Lead phone: ${batch.phoneNumber}`,\n  '',\n  'Conversation history (oldest first):',\n  history.length > 0 ? history.join('\\n') : '(no prior messages - this is the first contact)',\n  '',\n  `New message(s) from the lead (${batch.messageCount} text${batch.messageCount === 1 ? '' : 's'} received together):`,\n  batch.combinedMessage,\n  '',\n  \"Write Eric's next SMS reply only. No quotation marks, no labels, no sign-off.\",\n].join('\\n');\n\nreturn [\n  {\n    json: {\n      userPrompt,\n      forcedOptOut,\n      contactId: contact.id,\n      ghlConversationId: inboundLog.conversationId,\n      phoneNumber: batch.phoneNumber,\n      twilioNumber: batch.twilioNumber,\n      lastMessageSid: batch.lastMessageSid,\n    },\n  },\n];\n"
+      }
+    },
+    {
+      "id": "llm-0018",
+      "name": "Eric (Claude)",
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        2420,
+        300
+      ],
+      "parameters": {
+        "resource": "text",
+        "operation": "message",
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "claude-sonnet-5-5"
+        },
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "={{ $json.userPrompt }}"
+            }
+          ]
+        },
+        "simplify": true,
+        "options": {
+          "system": "You are Eric, an elite, high-performing conversational AI agent running seamlessly inside our Twilio-to-n8n ecosystem. Your voice is natural, brief, professional, and peer-to-peer.\n\nCRITICAL OPERATIONAL RULES:\n1. BREVITY: Never text more than 2-3 short sentences at a time. Match mobile messaging patterns.\n2. CONTEXT AWARENESS: Analyze the provided chat history before drafting your reply. Do not repeat greeting phrases or loops.\n3. HUMAN HANDOFF & OPT-OUT: If the user explicitly asks for a human, indicates frustration, asks a question completely outside your knowledge base, or triggers stop words (e.g., \"STOP\", \"UNSUBSCRIBE\", \"REMOVE\"), you must output a specific structural flag: [TRIGGER_HANDOFF].\n\nWhen [TRIGGER_HANDOFF] is activated, append it to the very beginning of your response so n8n can immediately reroute the lead to a manual review tag inside GoHighLevel and stop automated texts.",
+          "includeMergedResponse": true,
+          "maxTokens": 300,
+          "temperature": 0.6
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "code-0019",
+      "name": "Parse Eric Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// n8n Code node: \"Parse Eric Reply\"\n// Mode: Run Once for All Items\n//\n// Input: output of the \"Eric (Claude)\" Anthropic node.\n// Output fields consumed downstream:\n//   ericReplyText     - SMS text with the [TRIGGER_HANDOFF] flag removed\n//   handoff           - true -> tag contact for manual review in GHL\n//   optOut            - true -> also tag opt-out + set SMS DND in GHL\n//   sendReply         - true -> send ericReplyText via Twilio and log to GHL\n//   handoffTags       - tags to add to the GHL contact\n//   ghlConversationId, contactId, phoneNumber, twilioNumber\n\nconst HANDOFF_FLAG = '[TRIGGER_HANDOFF]';\n\nconst config = $('Eric Config').first().json;\nconst ctx = $('Build Eric Context').first().json;\nconst res = $input.first().json || {};\n\n// The Anthropic node returns either a merged string or a content-block array.\nlet raw = '';\nif (typeof res.merged_response === 'string') {\n  raw = res.merged_response;\n} else if (Array.isArray(res.content)) {\n  raw = res.content\n    .filter((block) => block && block.type === 'text' && typeof block.text === 'string')\n    .map((block) => block.text)\n    .join('\\n');\n} else if (typeof res.text === 'string') {\n  raw = res.text;\n}\n\nconst modelHandoff = raw.includes(HANDOFF_FLAG);\nconst optOut = ctx.forcedOptOut === true;\nconst handoff = modelHandoff || optOut;\n\nconst ericReplyText = raw\n  .split(HANDOFF_FLAG).join('')\n  .replace(/^\\s*(Eric|Eric\\/Team)\\s*:\\s*/i, '')\n  .replace(/^[\"'“”]+|[\"'“”]+$/g, '')\n  .trim();\n\nif (!handoff && ericReplyText.length === 0) {\n  throw new Error('Eric returned an empty reply without a handoff flag. Raw response: ' + JSON.stringify(res));\n}\n\nconst handoffTags = [];\nif (handoff) handoffTags.push(config.handoffTag);\nif (optOut) handoffTags.push(config.optOutTag);\n\nreturn [\n  {\n    json: {\n      ericReplyText,\n      handoff,\n      optOut,\n      // Never text an opted-out number. A non-opt-out handoff may still send\n      // Eric's short acknowledgement (e.g. \"Got it, looping in a teammate.\").\n      sendReply: !optOut && ericReplyText.length > 0,\n      handoffTags,\n      ghlConversationId: ctx.ghlConversationId,\n      contactId: ctx.contactId,\n      phoneNumber: ctx.phoneNumber,\n      twilioNumber: ctx.twilioNumber,\n    },\n  },\n];\n"
+      }
+    },
+    {
+      "id": "if-0020",
+      "name": "Handoff?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2860,
+        160
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-0021",
+              "leftValue": "={{ $json.handoff }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ghl-0022",
+      "name": "GHL Tag for Manual Review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3080,
+        140
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.contactId }}/tags",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: $json.handoffTags }) }}"
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "if-0023",
+      "name": "Opt-Out?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3300,
+        140
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-0024",
+              "leftValue": "={{ $('Parse Eric Reply').item.json.optOut }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ghl-0025",
+      "name": "GHL Set SMS DND",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3520,
+        120
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Parse Eric Reply').item.json.contactId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ dndSettings: { sms: { status: 'active', message: 'Opted out via SMS keyword' } } }) }}"
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "if-0026",
+      "name": "Send Reply?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2860,
+        460
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-0027",
+              "leftValue": "={{ $json.sendReply }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "twilio-0028",
+      "name": "Twilio Send Reply",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        3080,
+        440
+      ],
+      "parameters": {
+        "resource": "sms",
+        "operation": "send",
+        "from": "={{ $json.twilioNumber }}",
+        "to": "={{ $json.phoneNumber }}",
+        "toWhatsapp": false,
+        "message": "={{ $json.ericReplyText }}",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "ghl-0029",
+      "name": "GHL Log Outbound Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3300,
+        440
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages/inbound",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: 'SMS', direction: 'outbound', conversationId: $('Parse Eric Reply').item.json.ghlConversationId, conversationProviderId: $('Eric Config').first().json.ghlConversationProviderId, message: $('Parse Eric Reply').item.json.ericReplyText, altId: $json.sid, date: new Date().toISOString(), attachments: [] }) }}"
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "Twilio Inbound Webhook": {
+      "main": [
+        [
+          {
+            "node": "Ack Twilio (Empty TwiML)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ack Twilio (Empty TwiML)": {
+      "main": [
+        [
+          {
+            "node": "Eric Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eric Config": {
+      "main": [
+        [
+          {
+            "node": "Buffer Inbound SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buffer Inbound SMS": {
+      "main": [
+        [
+          {
+            "node": "Wait 15s (Rapid-Fire Window)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 15s (Rapid-Fire Window)": {
+      "main": [
+        [
+          {
+            "node": "Get Buffered Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Buffered Messages": {
+      "main": [
+        [
+          {
+            "node": "Debounce & Combine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Debounce & Combine": {
+      "main": [
+        [
+          {
+            "node": "Clear Consumed Buffer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GHL Upsert Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL Upsert Contact": {
+      "main": [
+        [
+          {
+            "node": "GHL Log Inbound Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL Log Inbound Message": {
+      "main": [
+        [
+          {
+            "node": "GHL Get Conversation History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GHL Get Conversation History": {
+      "main": [
+        [
+          {
+            "node": "Build Eric Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Eric Context": {
+      "main": [
+        [
+          {
+            "node": "Eric (Claude)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eric (Claude)": {
+      "main": [
+        [
+          {
+            "node": "Parse Eric Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Eric Reply": {
+      "main": [
+        [
+          {
+            "node": "Handoff?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Reply?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handoff?": {
+      "main": [
+        [
+          {
+            "node": "GHL Tag for Manual Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "GHL Tag for Manual Review": {
+      "main": [
+        [
+          {
+            "node": "Opt-Out?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opt-Out?": {
+      "main": [
+        [
+          {
+            "node": "GHL Set SMS DND",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Send Reply?": {
+      "main": [
+        [
+          {
+            "node": "Twilio Send Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Twilio Send Reply": {
+      "main": [
+        [
+          {
+            "node": "GHL Log Outbound Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "pinData": {}
+}
