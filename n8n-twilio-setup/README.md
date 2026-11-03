@@ -117,7 +117,7 @@ Don't add an `id` column. n8n creates one automatically.
 
 1. In n8n, go to **Workflows → Import from File** and select `workflows/eric_twilio_sms_workflow.json`.
 2. Open each node marked with a credential warning and select the matching credential:
-   - The 7 **GHL …** HTTP nodes: `GHL Chatbot token`
+   - The 6 **GHL …** HTTP nodes (already set to `GHL Chatbot token`): `GHL Chatbot token`
    - **Eric (Claude)**: `Anthropic (Eric)`
    - **Twilio Send Reply**: `Twilio (Eric)`
 3. **Eric Config:** paste the conversation provider ID from step 2.
