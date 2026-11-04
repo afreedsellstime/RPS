@@ -45,7 +45,9 @@ Compare the two after **about 150 sends each**: STOP rate, plus the share of rep
 - In Step 4, the tag `opener-v3` becomes the variant tag (`opener-v4a`, `opener-v4b` or `opener-v4`). The `opener-sent-<date>` tag stays.
 - Nothing else changes: health checks, pause rules, batch sizes and the daily cap stay as they are.
 
-### 2. Eric's prompt: Tone Patch v12 in Chatbot Inbound and Chatbot Outbound
+### 2. Eric's prompt: Tone Patch v12 in Chatbot Outbound only
+
+(Update Nov 3: Chatbot Inbound has no opener section; campaign replies go to Outbound. Default B is covered by Outbound's existing OWNERSHIP OPENER section. The final inserted text is in `prompt_section_added.txt`; see `APPLY.md`.)
 
 This edits the latest patch node only, per the team's rule. It changes one string: the "current openers" section. The old v3 openers **stay in the list**, because the 423 people who got them can still reply. The new section adds:
 
