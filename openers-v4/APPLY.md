@@ -17,3 +17,7 @@ The steps must go in this order, so Eric understands the new openers before any 
 Rollback:
 - Outbound: restore the version before "Openers v4" in Version history, then publish.
 - Sender task: put the v3 lines back in Step 3 and `opener-v3` back in Step 4.
+
+## Status: applied Nov 4, 2026 (about 6:50am Pacific)
+- Chatbot Outbound Tone Patch v12 published. The new version is `007ba57a-e964-4dad-bef0-0f568ca855c8`; the one before it is `e4c3cef7-0eb8-4480-9f38-05f7ae876020`. The full prompt was rebuilt from the saved draft and checked.
+- Sender task `trig_01JCbKMgSiDNHipE4dKQAMzj`: Step 3 now uses the v4 texts with A/B alternation, Step 4 tags `opener-v4`/`opener-v4a`/`opener-v4b`, and Step 5 reports the A/B counts. Everything else is word for word the same.
